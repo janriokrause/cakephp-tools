@@ -107,7 +107,7 @@ class TextAnalysisLib extends TextLib {
 			$str = $this->text;
 		}
 		$chars = preg_split('//', $str, -1);
-		$res = array();
+		$res = [];
 		foreach ($chars as $char) {
 			//$res[] = UnicodeLib::ord($char);
 			$res[] = ord($char);
@@ -121,7 +121,6 @@ class TextAnalysisLib extends TextLib {
 	 * @return array(char=>amount) for empty char or int amount for specific char
 	 */
 	public function occurrences($char = null, $caseSensitive = false) {
-
 		if ($caseSensitive) {
 			$str = $this->text;
 		} else {
@@ -132,7 +131,7 @@ class TextAnalysisLib extends TextLib {
 		}
 
 		if ($char === null) {
-			$occ = array();
+			$occ = [];
 			$str = str_split($str);
 			foreach ($str as $value) {
 				if (array_key_exists($value, $occ)) {
@@ -162,17 +161,16 @@ class TextAnalysisLib extends TextLib {
 	 * @return array(char=>amount) for empty char or int amount for specific char
 	 */
 	public function maxOccurrences($caseSensitive = false) {
-
 		$arr = $this->occurrences(null, $caseSensitive);
 		$max = 0;
-		$occ = array();
+		$occ = [];
 
 		foreach ($arr as $key => $value) {
 			if ($value === $max) {
 				$occ[$key] = $value;
 			} elseif ($value > $max) {
 				$max = $value;
-				$occ = array($key => $value);
+				$occ = [$key => $value];
 			}
 		}
 		//echo returns($occ);
@@ -187,24 +185,31 @@ class TextAnalysisLib extends TextLib {
 	}
 
 	public function getCharacter() {
-		if (!$this->char) $this->char = mb_strlen(strtr($this->text, array("\n" => '', "\r" =>
-				'')));
+		if (!$this->char) {
+			$this->char = mb_strlen(strtr($this->text, ["\n" => '', "\r" =>
+				'']));
+		}
 		return $this->char;
 	}
 
 	public function getLetter() {
 		if (!$this->letter) {
 			$lText = mb_strtolower($this->text);
-			for ($i = 0; $i < $this->length; $i++)
-				if (mb_strpos("abcdefghijklmnopqrstuvwxyzäöü", $lText[$i]) != false) $this->
+			for ($i = 0; $i < $this->length; $i++) {
+				if (mb_strpos("abcdefghijklmnopqrstuvwxyzäöü", $lText[$i]) != false) {
+					$this->
 						letter++;
+				}
+			}
 		}
 		return $this->letter;
 	}
 
 	public function getSpace() {
-		if (!$this->space) $this->space = mb_substr_count($this->text, " ") +
+		if (!$this->space) {
+			$this->space = mb_substr_count($this->text, " ") +
 				mb_substr_count($this->text, "\t");
+		}
 		return $this->space;
 	}
 
@@ -227,12 +232,12 @@ class TextAnalysisLib extends TextLib {
 	 * @param options
 	 * - min_char, max_char, case_sensititive, sort ('asc', 'desc', 'length', 'alpha', false), limit...
 	 */
-	public function wordCount($options = array()) {
+	public function wordCount($options = []) {
 		if (true || !$this->rrWord) {
-			$text = str_replace(array(NL, CR, PHP_EOL, TB), ' ', $this->text);
-			$res = array();
-			$search = array('*', '+', '~', ',', '.', ';', ':', '#', '', '(', ')', '{', '}', '[', ']', '$', '%', '“', '”', '—', '"', '‘', '’', '!', '?', '<', '>', '=', '/');
-			$search = array_merge($search, array(1, 2, 3, 4, 5, 6, 7, 8, 9, 0));
+			$text = str_replace([NL, CR, PHP_EOL, TB], ' ', $this->text);
+			$res = [];
+			$search = ['*', '+', '~', ',', '.', ';', ':', '#', '', '(', ')', '{', '}', '[', ']', '$', '%', '“', '”', '—', '"', '‘', '’', '!', '?', '<', '>', '=', '/'];
+			$search = array_merge($search, [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]);
 			$text = str_replace($search, ' ', $text);
 
 			$pieces = explode(' ', $text);
@@ -263,7 +268,6 @@ class TextAnalysisLib extends TextLib {
 				} elseif ($sort === 'length') {
 					//TODO:
 					//uasort($res, $callback);
-
 				} elseif ($sort === 'alpha') {
 					ksort($res);
 				}
@@ -281,26 +285,30 @@ class TextAnalysisLib extends TextLib {
 		if (!$this->sen && !$this->rSen) {
 			@preg_match_all("/[^:|;|\!|\.]+(:|;|\!|\.| )+/", $this->text, $m);
 			$this->sen = count($m[0]);
-			foreach ($m[0] as $s) $this->rSen[] = strtr(trim($s), array("\n" => '', "\r" => ''));
+			foreach ($m[0] as $s) {
+				$this->rSen[] = strtr(trim($s), ["\n" => '', "\r" => '']);
+			}
 		}
 		return $parse ? $this->rSen : $this->sen;
 	}
 
 	public function getParagraph($parse = false) {
 		if (!$this->para && !$this->rPara) {
-			@preg_match_all("/[^\n]+?(:|;|\!|\.| )+\n/s", strtr($this->text, array("\r" =>
-				'')) . "\n", $m);
+			@preg_match_all("/[^\n]+?(:|;|\!|\.| )+\n/s", strtr($this->text, ["\r" =>
+				'']) . "\n", $m);
 			$this->para = count($m[0]);
-			foreach ($m[0] as $p) $this->rPara[] = trim($p);
+			foreach ($m[0] as $p) {
+				$this->rPara[] = trim($p);
+			}
 		}
 		return $parse ? $this->rPara : $this->para;
 	}
 
 	public function beautify($wordwrap = false) {
 		if (!$this->beautified) {
-			$this->beautified = @preg_replace(array("/ {1,}/", "/\. {1,}\./", "/\. *(?!\.)/",
-				"/(,|:|;|\!|\)) */", "/(,|:|;|\!|\)|\.) *\r\n/", "/(\r\n) {3,}/"), array(" ", ".",
-				". ", "$1 ", "$1\r\n", "\r\n\r\n"), $this->text);
+			$this->beautified = @preg_replace(["/ {1,}/", "/\. {1,}\./", "/\. *(?!\.)/",
+				"/(,|:|;|\!|\)) */", "/(,|:|;|\!|\)|\.) *\r\n/", "/(\r\n) {3,}/"], [" ", ".",
+				". ", "$1 ", "$1\r\n", "\r\n\r\n"], $this->text);
 		}
 		return $wordwrap ? wordwrap($this->beautified, $wordwrap) : $this->beautified;
 	}

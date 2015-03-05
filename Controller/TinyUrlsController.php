@@ -15,7 +15,7 @@ App::uses('ToolsAppController', 'Tools.Controller');
  */
 class TinyUrlsController extends ToolsAppController {
 
-	public $uses = array('Tools.TinyUrl');
+	public $uses = ['Tools.TinyUrl'];
 
 	public function beforeFilter() {
 		parent::beforeFilter();
@@ -51,9 +51,9 @@ class TinyUrlsController extends ToolsAppController {
 
 		if (!empty($message)) {
 			$type = !empty($entry['TinyUrl']['flash_type']) ? $entry['TinyUrl']['flash_type'] : 'success';
-			$this->Common->flashMessage($message, $type);
+			$this->Flash->message($message, $type);
 		}
-		$this->TinyUrl->up($entry['TinyUrl']['id'], array('field' => 'used', 'modify' => true, 'timestampField' => 'last_used'));
+		$this->TinyUrl->up($entry['TinyUrl']['id'], ['field' => 'used', 'modify' => true, 'timestampField' => 'last_used']);
 		return $this->redirect($url, 301);
 	}
 
@@ -67,14 +67,14 @@ class TinyUrlsController extends ToolsAppController {
 			$this->TinyUrl->set($this->request->data);
 			if ($this->TinyUrl->validates()) {
 				$id = $this->TinyUrl->generate($this->TinyUrl->data['TinyUrl']['url']);
-				$this->Common->flashMessage('New Key: ' . h($id), 'success');
+				$this->Flash->message('New Key: ' . h($id), 'success');
 				$url = $this->TinyUrl->urlByKey($id);
 				$this->set(compact('url'));
-				$this->request->data = array();
+				$this->request->data = [];
 			}
 		}
 
-		$tinyUrls = $this->TinyUrl->find('count', array('conditions' => array()));
+		$tinyUrls = $this->TinyUrl->find('count', ['conditions' => []]);
 
 		$this->set(compact('tinyUrls'));
 	}
@@ -93,12 +93,10 @@ class TinyUrlsController extends ToolsAppController {
 	 * @return void
 	 */
 	public function admin_reset() {
-		if (!$this->Common->isPosted()) {
-			throw new MethodNotAllowedException();
-		}
+		$this->request->allowMethod('post');
 		$this->TinyUrl->truncate();
-		$this->Common->flashMessage(__d('tools', 'Done'), 'success');
-		return $this->Common->autoRedirect(array('action' => 'index'));
+		$this->Flash->message(__d('tools', 'Done'), 'success');
+		return $this->Common->autoRedirect(['action' => 'index']);
 	}
 
 }

@@ -1,4 +1,5 @@
 # How to contribute
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dereuromark/cakephp-tools?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Branching strategy
 The master branch is the currently active and maintained one and works with the current 2.x stable version.
@@ -25,7 +26,7 @@ assert coding standards are met. You can either use this pre-build repo and the 
 
 # Additional Resources
 
-* [My coding standards (extending the CakePHP ones)](http://www.dereuromark.de/coding-standards/)
+* [Coding standards guide (extending the CakePHP ones)](https://github.com/php-fig-rectified/fig-rectified-standards/)
 * [CakePHP coding standards](http://book.cakephp.org/2.0/en/contributing/cakephp-coding-conventions.html)
 * [General GitHub documentation](http://help.github.com/)
 * [GitHub pull request documentation](http://help.github.com/send-pull-requests/)

@@ -4,7 +4,7 @@
  * Random Lib
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class RandomLib {
 
@@ -55,14 +55,15 @@ class RandomLib {
 	 * 1950-01-01 - 2050-12-31
 	 */
 	public static function date($min = null, $max = null, $formatReturn = null) {
-		if ($min === null && $max === null)
-		$res = time();
-	elseif ($min > 0 && $max === null)
-		$res = $min;
-	elseif ($min > 0 && $max > 0)
-		$res = static::int($min, $max);
-	else
-		$res = time();
+		if ($min === null && $max === null) {
+			$res = time();
+		} elseif ($min > 0 && $max === null) {
+			$res = $min;
+		} elseif ($min > 0 && $max > 0) {
+			$res = static::int($min, $max);
+		} else {
+			$res = time();
+		}
 
 		$res = 0;
 		$formatReturnAs = FORMAT_DB_DATETIME;
@@ -81,7 +82,6 @@ class RandomLib {
 	 */
 
 	public static function time($min = null, $max = null, $formatReturn = null) {
-
 		$res = 0;
 		//$returnValueAs = FORMAT_DB_TIME;
 		if ($formatReturn !== null) {
@@ -105,14 +105,16 @@ class RandomLib {
 
 		if ($dobMonth == 2) {
 			// leap year?
-			if ($ageYears % 4 || $ageYears % 400)
+			if ($ageYears % 4 || $ageYears % 400) {
 				$maxDays = 29;
-			else
+			} else {
 				$maxDays = 28;
-		} elseif (in_array($dobMonth, array(4, 6, 9, 11)))
+			}
+		} elseif (in_array($dobMonth, [4, 6, 9, 11])) {
 			$maxDays = 30;
-		else
+		} else {
 			$maxDays = 31;
+		}
 
 		$dobDay = static::int(1, $maxDays);
 
@@ -130,9 +132,9 @@ class RandomLib {
 	public static function pronounceablePwd($length = 10) {
 		srand((double)microtime() * 1000000);
 		$password = '';
-		$vowels = array("a", "e", "i", "o", "u");
-		$cons = array("b", "c", "d", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "u", "v", "w", "tr",
-							"cr", "br", "fr", "th", "dr", "ch", "ph", "wr", "st", "sp", "sw", "pr", "sl", "cl");
+		$vowels = ["a", "e", "i", "o", "u"];
+		$cons = ["b", "c", "d", "g", "h", "j", "k", "l", "m", "n", "p", "r", "s", "t", "u", "v", "w", "tr",
+							"cr", "br", "fr", "th", "dr", "ch", "ph", "wr", "st", "sp", "sw", "pr", "sl", "cl"];
 		for ($i = 0; $i < $length; $i++) {
 			$password .= $cons[mt_rand(0, 31)] . $vowels[mt_rand(0, 4)];
 		}
@@ -196,26 +198,28 @@ class RandomLib {
 	 * @link http://www.gelembjuk.com/index.php?option=com_content&view=article&id=60&catid=37:php&Itemid=56
 	 */
 	public static function sentences($sentences, $wordscount = 2) {
-		$hash = array();
-		$resultsentences = array();
+		$hash = [];
+		$resultsentences = [];
 
 		for ($i = 0; $i < count($sentences); $i++) {
 			$words = split(' ', trim($sentences[$i]));
 
 			for ($k = 0; $k < count($words) - $wordscount; $k++) {
-				$prefix = trim(join(' ', array_slice($words, $k, $wordscount)));
-				if ($prefix === '')
+				$prefix = trim(implode(' ', array_slice($words, $k, $wordscount)));
+				if ($prefix === '') {
 					continue;
+				}
 
 				if (empty($hash[$prefix])) {
-					$hash[$prefix] = array($words[$k + $wordscount]);
+					$hash[$prefix] = [$words[$k + $wordscount]];
 
 					for ($j = $i + 1; $j < count($sentences); $j++) {
 						if (preg_match('/' . ereg_replace('/', '\/', preg_quote($prefix)) . '(.*)$/', $sentences[$j], $m)) {
 							$w = split(' ', trim($m[1]));
 
-							if (count($w) > 0 && trim($w[0]) !== '')
+							if (count($w) > 0 && trim($w[0]) !== '') {
 								array_push($hash[$prefix], trim($w[0]));
+							}
 						}
 					}
 				}
@@ -224,10 +228,11 @@ class RandomLib {
 
 		$prefixes = array_keys($hash);
 
-		$stpr = array();
+		$stpr = [];
 		foreach ($prefixes as $pr) {
-			if ($pr[0] == strtoupper($pr[0]))
+			if ($pr[0] == strtoupper($pr[0])) {
 				array_push($stpr, $pr);
+			}
 		}
 
 		for ($i = 0; $i < count($sentences); $i++) {
@@ -242,12 +247,13 @@ class RandomLib {
 				array_push($sent, $w);
 				$j++;
 
-				$p = join(' ', array_slice($sent, $j, $wordscount));
+				$p = implode(' ', array_slice($sent, $j, $wordscount));
 			} while (strrpos($w, '.') != strlen($w) - 1 && $j < $cc * 2);
 
-			$sn = join(' ', $sent);
-			if ($sn[strlen($sn) - 1] !== '.')
+			$sn = implode(' ', $sent);
+			if ($sn[strlen($sn) - 1] !== '.') {
 				$sn .= '.';
+			}
 			array_push($resultsentences, $sn);
 		}
 		return $resultsentences;

@@ -37,19 +37,19 @@ class GeocodeLib {
 	const UNIT_MILES = 'M';
 
 	// First tries with curl, then cake, then php
-	public $use = array(
+	public $use = [
 		'curl' => true,
 		'cake' => true,
 		'php' => true
-	);
+	];
 
-	public $units = array(
+	public $units = [
 		self::UNIT_KM => 1.609344,
 		self::UNIT_NAUTICAL => 0.868976242,
 		self::UNIT_FEET => 5280,
 		self::UNIT_INCHES => 63360,
 		self::UNIT_MILES => 1
-	);
+	];
 
 	/**
 	 * Validation and retrieval options
@@ -59,20 +59,20 @@ class GeocodeLib {
 	 * - ...
 	 *
 	 */
-	public $options = array(
+	public $options = [
 		'log' => false,
 		'pause' => 2000000, # in microseconds (2000000 = 2 seconds = recommended by Google)
 		'repeat' => 2, # if over limits, how many times to repeat
 		'min_accuracy' => self::ACC_COUNTRY,
 		'allow_inconclusive' => true,
-		'expect' => array(), # see accuracyTypes for details
+		'expect' => [], # see accuracyTypes for details
 		'host' => null, # results in maps.google.com - use if you wish to obtain the closest address
-	);
+	];
 
 	/**
 	 * Url params
 	 */
-	public $params = array(
+	public $params = [
 		'address' => '', # either address or latlng required!
 		'latlng' => '', # The textual latitude/longitude value for which you wish to obtain the closest, human-readable address
 		'region' => '', # The region code, specified as a ccTLD ("top-level domain") two-character
@@ -80,23 +80,23 @@ class GeocodeLib {
 		'bounds' => '',
 		'sensor' => 'false', # device with gps module sensor
 		//'key' => '' # not necessary anymore
-	);
+	];
 
 	public $reachedQueryLimit = false;
-	protected $error = array();
-	protected $debug = array();
+	protected $error = [];
+	protected $debug = [];
 
 	protected $result = null;
 
-	public $statusCodes = array(
+	public $statusCodes = [
 		self::STATUS_SUCCESS => 'Success',
 		self::STATUS_BAD_REQUEST => 'Sensor param missing',
 		self::STATUS_MISSING_QUERY => 'Adress/LatLng missing',
 		self::STATUS_UNKNOWN_ADDRESS => 'Success, but to address found',
 		self::STATUS_TOO_MANY_QUERIES => 'Limit exceeded',
-	);
+	];
 
-	public $accuracyTypes = array(
+	public $accuracyTypes = [
 		self::ACC_COUNTRY => 'country',
 		self::ACC_AAL1 => 'administrative_area_level_1', # provinces/states
 		self::ACC_AAL2 => 'administrative_area_level_2 ',
@@ -107,9 +107,9 @@ class GeocodeLib {
 		self::ACC_ROUTE => 'route',
 		self::ACC_INTERSEC => 'intersection',
 		self::ACC_STREET => 'street_address',
-	);
+	];
 
-	public function __construct($options = array()) {
+	public function __construct(array $options = []) {
 		$this->defaultParams = $this->params;
 		$this->defaultOptions = $this->options;
 		if (Configure::read('debug') > 0) {
@@ -126,7 +126,7 @@ class GeocodeLib {
 	 * @param array $params
 	 * @return void
 	 */
-	public function setParams($params) {
+	public function setParams(array $params) {
 		foreach ($params as $key => $value) {
 			if ($key === 'sensor' && $value !== 'false' && $value !== 'true') {
 				$value = !empty($value) ? 'true' : 'false';
@@ -139,7 +139,7 @@ class GeocodeLib {
 	 * @param array $options
 	 * @return void
 	 */
-	public function setOptions($options) {
+	public function setOptions(array $options) {
 		foreach ($options as $key => $value) {
 			$this->options[$key] = $value;
 		}
@@ -167,7 +167,7 @@ class GeocodeLib {
 	 * @return void
 	 */
 	public function reset($full = true) {
-		$this->error = array();
+		$this->error = [];
 		$this->result = null;
 		$this->reachedQueryLimit = false;
 		if (empty($full)) {
@@ -187,10 +187,10 @@ class GeocodeLib {
 	 * @return string url (full)
 	 */
 	protected function _url() {
-		$params = array(
+		$params = [
 			'host' => $this->options['host']
-		);
-		$url = String::insert(static::BASE_URL, $params, array('before' => '{', 'after' => '}', 'clean' => true));
+		];
+		$url = String::insert(static::BASE_URL, $params, ['before' => '{', 'after' => '}', 'clean' => true]);
 		return $url;
 	}
 
@@ -213,7 +213,7 @@ class GeocodeLib {
 	 */
 	public function getResult() {
 		if ($this->result === null) {
-			return array();
+			return [];
 		}
 		return $this->result;
 	}
@@ -234,14 +234,14 @@ class GeocodeLib {
 	 * @param array $params
 	 * @return bool Success
 	 */
-	public function geocode($address, $params = array()) {
+	public function geocode($address, array $params = []) {
 		if ($this->reachedQueryLimit) {
 			$this->setError('Over Query Limit - abort');
 			return false;
 		}
 		$this->reset(false);
 		$this->_setDebug('geocode', compact('address', 'params'));
-		$params = array('address' => $address) + $params;
+		$params = ['address' => $address] + $params;
 		$this->setParams($params);
 
 		$count = 0;
@@ -276,7 +276,6 @@ class GeocodeLib {
 					CakeLog::write('geocode', __d('tools', 'Address \'%s\' has been geocoded', $address));
 				}
 				break;
-
 			} elseif ($status == static::STATUS_TOO_MANY_QUERIES) {
 				// sent geocodes too fast, delay +0.1 seconds
 				if ($this->options['log']) {
@@ -284,7 +283,6 @@ class GeocodeLib {
 				}
 				$count++;
 			} else {
-
 				// something went wrong
 				$errorMessage = (isset($result['error_message']) ? $result['error_message'] : '');
 				if (empty($errorMessage)) {
@@ -323,7 +321,7 @@ class GeocodeLib {
 	 * @param array $params
 	 * @return bool Success
 	 */
-	public function reverseGeocode($lat, $lng, $params = array()) {
+	public function reverseGeocode($lat, $lng, array $params = []) {
 		if ($this->reachedQueryLimit) {
 			$this->setError('Over Query Limit - abort');
 			return false;
@@ -331,7 +329,7 @@ class GeocodeLib {
 		$this->reset(false);
 		$this->_setDebug('reverseGeocode', compact('lat', 'lng', 'params'));
 		$latlng = $lat . ',' . $lng;
-		$params = array('latlng' => $latlng) + $params;
+		$params = ['latlng' => $latlng] + $params;
 		$this->setParams($params);
 
 		$count = 0;
@@ -364,14 +362,12 @@ class GeocodeLib {
 					CakeLog::write('geocode', __d('tools', 'Address \'%s\' has been geocoded', $latlng));
 				}
 				break;
-
 			} elseif ($status == static::STATUS_TOO_MANY_QUERIES) {
 				// sent geocodes too fast, delay +0.1 seconds
 				if ($this->options['log']) {
 					CakeLog::write('geocode', __d('tools', 'Delay necessary for \'%s\'', $latlng));
 				}
 				$count++;
-
 			} else {
 				// something went wrong
 				$this->setError('Error ' . $status . (isset($this->statusCodes[$status]) ? ' (' . $this->statusCodes[$status] . ')' : ''));
@@ -415,10 +411,19 @@ class GeocodeLib {
 			}
 			$this->result = $res;
 		}
+		// Only necessary for allow_inconclusive and no valid results found
+		if (!$this->result && !empty($result['results'])) {
+			$this->result = $result['results'][0];
+		}
+
 		$this->result['valid_results'] = $validResults;
 		$this->result['all'] = $result['results'];
 
 		// validate
+		if (!$this->options['allow_inconclusive'] && $validResults === 0) {
+			$this->setError(__d('tools', 'No results found'));
+			return false;
+		}
 		if (!$this->options['allow_inconclusive'] && $validResults > 1) {
 			$this->setError(__d('tools', 'Inconclusive result (total of %s)', $validResults));
 			return false;
@@ -518,7 +523,7 @@ class GeocodeLib {
 			$record = json_decode($record, true);
 		}
 		if (empty($record['results'])) {
-			$record['results'] = array();
+			$record['results'] = [];
 			return $record;
 		}
 		$record['results'] = $this->_transformData($record['results']);
@@ -570,7 +575,7 @@ class GeocodeLib {
 	 */
 	protected function _transformData($record) {
 		if (!is_array($record)) {
-			return array();
+			return [];
 		}
 		if (!array_key_exists('address_components', $record)) {
 			foreach (array_keys($record) as $key) {
@@ -579,10 +584,10 @@ class GeocodeLib {
 			return $record;
 		}
 
-		$res = array();
+		$res = [];
 
 		// handle and organize address_components
-		$components = array();
+		$components = [];
 		foreach ($record['address_components'] as $c) {
 			$type = $c['types'][0];
 			$types = $c['types'];
@@ -592,7 +597,7 @@ class GeocodeLib {
 				$components[$type]['abbr'] .= ' ' . $c['short_name'];
 				$components[$type]['types'] += $types;
 			} else {
-				$components[$type] = array('name' => $c['long_name'], 'abbr' => $c['short_name'], 'types' => $types);
+				$components[$type] = ['name' => $c['long_name'], 'abbr' => $c['short_name'], 'types' => $types];
 			}
 		}
 
@@ -642,7 +647,7 @@ class GeocodeLib {
 		if (array_key_exists('types', $record)) {
 			$res['types'] = $record['types'];
 		} else {
-			$res['types'] = array();
+			$res['types'] = [];
 		}
 
 		//TODO: add more
@@ -652,16 +657,16 @@ class GeocodeLib {
 		$res['location_type'] = $record['geometry']['location_type'];
 
 		if (!empty($record['geometry']['viewport'])) {
-		$res['viewport'] = array('sw' => $record['geometry']['viewport']['southwest'], 'ne' => $record['geometry']['viewport']['northeast']);
+			$res['viewport'] = ['sw' => $record['geometry']['viewport']['southwest'], 'ne' => $record['geometry']['viewport']['northeast']];
 		}
 		if (!empty($record['geometry']['bounds'])) {
-			$res['bounds'] = array('sw' => $record['geometry']['bounds']['southwest'], 'ne' => $record['geometry']['bounds']['northeast']);
+			$res['bounds'] = ['sw' => $record['geometry']['bounds']['southwest'], 'ne' => $record['geometry']['bounds']['northeast']];
 		}
 
 		// manuell corrections
-		$array = array(
+		$array = [
 			'Berlin' => 'BE',
-		);
+		];
 		if (!empty($res['country_province_code']) && array_key_exists($res['country_province_code'], $array)) {
 			$res['country_province_code'] = $array[$res['country_province_code']];
 		}
@@ -684,9 +689,11 @@ class GeocodeLib {
 	 * note: expects url with json encoded content
 	 *
 	 * @return mixed
-	 **/
+	 */
 	protected function _fetch($url, $query) {
-		$this->HttpSocket = new HttpSocket();
+		if (!isset($this->HttpSocket)) {
+			$this->HttpSocket = new HttpSocket();
+		}
 		foreach ($query as $k => $v) {
 			if ($v === '') {
 				unset($query[$k]);
@@ -696,7 +703,7 @@ class GeocodeLib {
 			return $res->body;
 		}
 		$errorCode = $this->HttpSocket->response->code;
-		$this->setError('Error '. $errorCode. ': ' . $this->errorMessage($errorCode));
+		$this->setError('Error ' . $errorCode . ': ' . $this->errorMessage($errorCode));
 		return false;
 	}
 
@@ -724,12 +731,12 @@ class GeocodeLib {
 	/**
 	 * Calculates Distance between two points - each: array('lat'=>x,'lng'=>y)
 	 * DB:
-		'6371.04 * ACOS( COS( PI()/2 - RADIANS(90 - Retailer.lat)) * ' .
-						'COS( PI()/2 - RADIANS(90 - '. $data['Location']['lat'] .')) * ' .
-						'COS( RADIANS(Retailer.lng) - RADIANS('. $data['Location']['lng'] .')) + ' .
-						'SIN( PI()/2 - RADIANS(90 - Retailer.lat)) * ' .
-						'SIN( PI()/2 - RADIANS(90 - '. $data['Location']['lat'] . '))) ' .
-		'AS distance'
+	 * '6371.04 * ACOS( COS( PI()/2 - RADIANS(90 - Retailer.lat)) * ' .
+	 * 'COS( PI()/2 - RADIANS(90 - '. $data['Location']['lat'] .')) * ' .
+	 * 'COS( RADIANS(Retailer.lng) - RADIANS('. $data['Location']['lng'] .')) + ' .
+	 * 'SIN( PI()/2 - RADIANS(90 - Retailer.lat)) * ' .
+	 * 'SIN( PI()/2 - RADIANS(90 - '. $data['Location']['lat'] . '))) ' .
+	 * 'AS distance'
 	 *
 	 * @param array pointX
 	 * @param array pointY
@@ -876,7 +883,7 @@ class GeocodeLib {
 	 * @return string
 	 */
 	public function errorMessage($code) {
-		$codes = array(
+		$codes = [
 			static::CODE_SUCCESS => 'Success',
 			static::CODE_BAD_REQUEST => 'Bad Request',
 			static::CODE_MISSING_ADDRESS => 'Bad Address',
@@ -884,7 +891,7 @@ class GeocodeLib {
 			static::CODE_UNAVAILABLE_ADDRESS => 'Unavailable Address',
 			static::CODE_BAD_KEY => 'Bad Key',
 			static::CODE_TOO_MANY_QUERIES => 'Too Many Queries',
-		);
+		];
 		if (isset($codes[$code])) {
 			return __d('tools', $codes[$code]);
 		}

@@ -6,7 +6,7 @@ App::uses('ComponentCollection', 'Controller');
  * Password hashing and output
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class PwdShell extends AppShell {
 
@@ -16,7 +16,7 @@ class PwdShell extends AppShell {
 	 * @return void
 	 */
 	public function hash() {
-		$components = array('Tools.AuthExt', 'Auth');
+		$components = ['Tools.AuthExt', 'Auth'];
 
 		$class = null;
 		foreach ($components as $component) {

@@ -8,19 +8,19 @@ App::uses('ModelBehavior', 'Model');
  * Copyright 2011, dereuromark (http://www.dereuromark.de)
  *
  * @link http://github.com/dereuromark/
- * @license http://www.opensource.org/licenses/mit-license.php The MIT License
+ * @license http://opensource.org/licenses/mit-license.php MIT
  * @link http://www.dereuromark.de/2011/07/05/introducing-two-cakephp-behaviors/
  */
 class ConfirmableBehavior extends ModelBehavior {
 
-	protected $_defaultConfig = array(
+	protected $_defaultConfig = [
 		'message' => 'Please confirm the checkbox',
 		'field' => 'confirm',
 		'model' => null,
 		'before' => 'validate',
-	);
+	];
 
-	public function setup(Model $Model, $config = array()) {
+	public function setup(Model $Model, $config = []) {
 		if (!isset($this->settings[$Model->alias])) {
 			$this->settings[$Model->alias] = $this->_defaultConfig;
 		}
@@ -33,7 +33,7 @@ class ConfirmableBehavior extends ModelBehavior {
 	 * @param Model $Model
 	 * @return bool Success
 	 */
-	public function beforeValidate(Model $Model, $options = array()) {
+	public function beforeValidate(Model $Model, $options = []) {
 		$return = parent::beforeValidate($Model, $options);
 
 		if ($this->settings[$Model->alias]['before'] === 'validate') {
@@ -51,7 +51,7 @@ class ConfirmableBehavior extends ModelBehavior {
 	 * @param Model $Model
 	 * @return mixed
 	 */
-	public function beforeSave(Model $Model, $options = array()) {
+	public function beforeSave(Model $Model, $options = []) {
 		$return = parent::beforeSave($Model, $options);
 
 		if ($this->settings[$Model->alias]['before'] === 'save') {
@@ -72,8 +72,8 @@ class ConfirmableBehavior extends ModelBehavior {
 		$message = $this->settings[$Model->alias]['message'];
 
 		if (empty($Model->data[$Model->alias][$field])) {
-				$Model->invalidate($field, __d('tools', $message));
-				return false;
+			$Model->invalidate($field, __d('tools', $message));
+			return false;
 		}
 
 		return $return;

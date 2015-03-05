@@ -7,17 +7,17 @@ App::uses('Folder', 'Utility');
  * it also makes sure there is no whitespace at the beginning of the file
  *
  * @author Mark Scherer, Maximilian Ruta
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class PhpTagShell extends AppShell {
 
 	public $autoCorrectAll = false;
 
 	// each report: [0] => found, [1] => corrected
-	public $report = array(
-		'leading' => array(0, 0),
-		'trailing' => array(0, 0)
-	);
+	public $report = [
+		'leading' => [0, 0],
+		'trailing' => [0, 0]
+	];
 
 	public function main() {
 		$this->out('Removes closing php tag (?>) from php files.', 2);
@@ -38,17 +38,17 @@ class PhpTagShell extends AppShell {
 			$folder = APP;
 		}
 		if (is_file($folder)) {
-			$r = array($folder);
+			$r = [$folder];
 		} else {
 			$App = new Folder($folder);
 			$this->out("Find recursive *.php in [" . $folder . "] ....");
 			$r = $App->findRecursive('.*\.php');
 		}
 
-		$folders = array();
+		$folders = [];
 
 		foreach ($r as $file) {
-			$error = array();
+			$error = [];
 			$action = '';
 
 			$c = file_get_contents($file);
@@ -74,7 +74,7 @@ class PhpTagShell extends AppShell {
 
 					while (empty($action)) {
 						//TODO: [r]!
-						$action = $this->in('Remove? [y]/[n], [a] for all in this folder, [r] for all below, [*] for all files(!), [q] to quit', array('y', 'n', 'r', 'a', 'q', '*'), 'q');
+						$action = $this->in('Remove? [y]/[n], [a] for all in this folder, [r] for all below, [*] for all files(!), [q] to quit', ['y', 'n', 'r', 'a', 'q', '*'], 'q');
 					}
 				} else {
 					$action = 'y';
@@ -83,7 +83,6 @@ class PhpTagShell extends AppShell {
 				if ($action === '*') {
 					$action = 'y';
 					$this->autoCorrectAll = true;
-
 				} elseif ($action === 'a') {
 					$action = 'y';
 					$folders[] = $dirname;

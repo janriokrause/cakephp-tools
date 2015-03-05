@@ -9,7 +9,7 @@ App::uses('ConsoleOutput', 'Console');
  *  $stdOut = new TestConsoleOutput();
  *  $this->MyShell = new MyShell($stdOut);
  *
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  * @author Mark Scherer
  */
 class TestConsoleOutput extends ConsoleOutput {
@@ -19,7 +19,7 @@ class TestConsoleOutput extends ConsoleOutput {
 	 *
 	 * @var array
 	 */
-	public $output = array();
+	public $output = [];
 
 	/**
 	 * Overwrite _write to output the message to debug instead of CLI.
@@ -28,7 +28,7 @@ class TestConsoleOutput extends ConsoleOutput {
 	 * @return void
 	 */
 	protected function _write($message) {
-		if (php_sapi_name() !== 'cli' && !empty($_GET) && !empty($_GET['debug'])) {
+		if (!empty($_GET['debug']) || !empty($_SERVER['argv']) && (in_array('-v', $_SERVER['argv'], true) || in_array('-vv', $_SERVER['argv'], true))) {
 			debug($message);
 		}
 		$this->output[] = $message;

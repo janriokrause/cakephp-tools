@@ -1,5 +1,5 @@
 <?php
-App::import('Vendor', 'Tools.SpreadsheetExcelReader', array('file' => 'SpreadsheetExcelReader' . DS . 'SpreadsheetExcelReader.php'));
+App::import('Vendor', 'Tools.SpreadsheetExcelReader', ['file' => 'SpreadsheetExcelReader' . DS . 'SpreadsheetExcelReader.php']);
 if (!class_exists('SpreadsheetExcelReader')) {
 	throw new CakeException('Cannot load SpreadsheetExcelReader class');
 }
@@ -20,7 +20,8 @@ if (!class_exists('SpreadsheetExcelReader')) {
  * See the test cases for details.
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class ExcelReaderLib extends SpreadsheetExcelReader {
+
 }

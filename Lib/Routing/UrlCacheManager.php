@@ -16,19 +16,19 @@ class UrlCacheManager {
 	 * Holds all generated urls so far by the application indexed by a custom hash
 	 *
 	 */
-	public static $cache = array();
+	public static $cache = [];
 
 	/**
 	 * Holds all generated urls so far by the application indexed by a custom hash
 	 *
 	 */
-	public static $cachePage = array();
+	public static $cachePage = [];
 
 	/**
 	 * Holds all generated urls so far by the application indexed by a custom hash
 	 *
 	 */
-	public static $extras = array();
+	public static $extras = [];
 
 	/**
 	 * Type for the current set (triggered by last get)
@@ -53,7 +53,7 @@ class UrlCacheManager {
 	/**
 	 * Params that will always be present and will determine the global cache if pageFiles is used
 	 */
-	public static $paramFields = array('controller', 'plugin', 'action', 'prefix');
+	public static $paramFields = ['controller', 'plugin', 'action', 'prefix'];
 
 	/**
 	 * Should be called in beforeRender()
@@ -86,7 +86,7 @@ class UrlCacheManager {
 			static::$paramFields = array_merge(static::$paramFields, (array)Configure::read('Routing.prefixes'));
 		}
 		static::$extras = array_intersect_key($params, array_combine(static::$paramFields, static::$paramFields));
-		$defaults = array();
+		$defaults = [];
 		foreach (static::$paramFields as $field) {
 			$defaults[$field] = '';
 		}
@@ -115,11 +115,8 @@ class UrlCacheManager {
 		if (is_array($keyUrl)) {
 			$keyUrl += static::$extras;
 			// prevent different hashs on different orders
-			ksort($keyUrl, SORT_STRING);
 			// prevent different hashs on different types (int/string/bool)
-			foreach ($keyUrl as $key => $val) {
-				$keyUrl[$key] = (string) $val;
-			}
+			$keyUrl = static::prepareForSerialize($keyUrl);
 		}
 		static::$key = md5(serialize($keyUrl) . $full);
 
@@ -151,6 +148,29 @@ class UrlCacheManager {
 		} else {
 			static::$cache[static::$key] = $data;
 		}
+	}
+
+	/**
+	 * Sorts array and casts all values to string.
+	 *
+	 * @param array $array Array to sort and cast.
+	 * @return mixed On success or the argument passed
+	 */
+	public static function prepareForSerialize($array) {
+		if (!is_array($array)) {
+			return $array;
+		}
+		// prevent different hashs on different orders
+		ksort($array, SORT_STRING);
+		// prevent different hashs on different types (int/string/bool)
+		foreach ($array as $key => $val) {
+			if (is_array($val)) {
+				$array[$key] = static::prepareForSerialize($val);
+			} else {
+				$array[$key] = (string)$val;
+			}
+		}
+		return $array;
 	}
 
 }

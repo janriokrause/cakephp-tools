@@ -1,6 +1,7 @@
 <?php
 App::uses('ModelBehavior', 'Model');
 App::uses('Security', 'Utility');
+App::uses('PasswordHasherFactory', 'Shim.Controller/Component/Auth');
 
 // @deprecated Use Configure settings instead.
 if (!defined('PWD_MIN_LENGTH')) {
@@ -34,18 +35,19 @@ if (!defined('PWD_MAX_LENGTH')) {
  * - Support different auth types and password hashing algorythms
  * - PasswordHasher support
  * - Tools.Modern PasswordHasher and password_hash()/password_verify() support
+ * - Option to use complex validation rule (regex)
  *
- * @version 1.8 (Now supports Tools.Modern PasswordHasher and password_hash() method)
+ * @version 1.9
  * @author Mark Scherer
  * @link http://www.dereuromark.de/2011/08/25/working-with-passwords-in-cakephp
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class PasswordableBehavior extends ModelBehavior {
 
 	/**
 	 * @var array
 	 */
-	protected $_defaultConfig = array(
+	protected $_defaultConfig = [
 		'field' => 'password',
 		'confirm' => true, // Set to false if in admin view and no confirmation (pwd_repeat) is required
 		'require' => true, // If a password change is required (set to false for edit forms, leave it true for pure password update forms)
@@ -62,50 +64,14 @@ class PasswordableBehavior extends ModelBehavior {
 		'passwordHasher' => null, // If a custom pwd hasher is been used [Cake2.4+]
 		'allowSame' => true, // Don't allow the old password on change
 		'minLength' => PWD_MIN_LENGTH,
-		'maxLength' => PWD_MAX_LENGTH
-	);
+		'maxLength' => PWD_MAX_LENGTH,
+		'customValidation' => null // Custom validation rule(s) for the formField
+	];
 
 	/**
 	 * @var array
 	 */
-	protected $_validationRules = array(
-		'formField' => array(
-			'between' => array(
-				'rule' => array('between', PWD_MIN_LENGTH, PWD_MAX_LENGTH),
-				'message' => array('valErrBetweenCharacters %s %s', PWD_MIN_LENGTH, PWD_MAX_LENGTH),
-				'allowEmpty' => null,
-				'last' => true,
-			)
-		),
-		'formFieldRepeat' => array(
-			'between' => array(
-				'rule' => array('between', PWD_MIN_LENGTH, PWD_MAX_LENGTH),
-				'message' => array('valErrBetweenCharacters %s %s', PWD_MIN_LENGTH, PWD_MAX_LENGTH),
-				'allowEmpty' => null,
-				'last' => true,
-			),
-			'validateIdentical' => array(
-				'rule' => array('validateIdentical', 'formField'),
-				'message' => 'valErrPwdNotMatch',
-				'allowEmpty' => null,
-				'last' => true,
-			),
-		),
-		'formFieldCurrent' => array(
-			'notEmpty' => array(
-				'rule' => array('notEmpty'),
-				'message' => 'valErrProvideCurrentPwd',
-				'allowEmpty' => null,
-				'last' => true,
-			),
-			'validateCurrentPwd' => array(
-				'rule' => 'validateCurrentPwd',
-				'message' => 'valErrCurrentPwdIncorrect',
-				'allowEmpty' => null,
-				'last' => true,
-			)
-		),
-	);
+	protected $_validationRules = [];
 
 	/**
 	 * Adding validation rules
@@ -113,7 +79,46 @@ class PasswordableBehavior extends ModelBehavior {
 	 *
 	 * @return void
 	 */
-	public function setup(Model $Model, $config = array()) {
+	public function setup(Model $Model, $config = []) {
+		$this->_validationRules = [
+			'formField' => [
+				'between' => [
+					'rule' => ['between', PWD_MIN_LENGTH, PWD_MAX_LENGTH],
+					'message' => __d('tools', 'valErrBetweenCharacters %s %s', PWD_MIN_LENGTH, PWD_MAX_LENGTH),
+					'allowEmpty' => null,
+					'last' => true,
+				]
+			],
+			'formFieldRepeat' => [
+				'validateNotEmpty' => [
+					'rule' => ['notEmpty'],
+					'message' => __d('tools', 'valErrPwdRepeat'),
+					'allowEmpty' => true,
+					'last' => true,
+				],
+				'validateIdentical' => [
+					'rule' => ['validateIdentical', 'formField'],
+					'message' => __d('tools', 'valErrPwdNotMatch'),
+					'allowEmpty' => null,
+					'last' => true,
+				],
+			],
+			'formFieldCurrent' => [
+				'notEmpty' => [
+					'rule' => ['notEmpty'],
+					'message' => __d('tools', 'valErrProvideCurrentPwd'),
+					'allowEmpty' => null,
+					'last' => true,
+				],
+				'validateCurrentPwd' => [
+					'rule' => 'validateCurrentPwd',
+					'message' => __d('tools', 'valErrCurrentPwdIncorrect'),
+					'allowEmpty' => null,
+					'last' => true,
+				]
+			]
+		];
+
 		$defaults = $this->_defaultConfig;
 		if ($configureDefaults = Configure::read('Passwordable')) {
 			$defaults = $configureDefaults + $defaults;
@@ -139,10 +144,8 @@ class PasswordableBehavior extends ModelBehavior {
 				$rule['allowEmpty'] = !$this->settings[$Model->alias]['require'];
 
 				if ($key === 'between') {
-					$rule['rule'][1] = $this->settings[$Model->alias]['minLength'];
-					$rule['message'][1] = $this->settings[$Model->alias]['minLength'];
-					$rule['rule'][2] = $this->settings[$Model->alias]['maxLength'];
-					$rule['message'][2] = $this->settings[$Model->alias]['maxLength'];
+					$rule['rule'] = ['between', $this->settings[$Model->alias]['minLength'], $this->settings[$Model->alias]['maxLength']];
+					$rule['message'] = __d('tools', 'valErrBetweenCharacters %s %s', $this->settings[$Model->alias]['minLength'], $this->settings[$Model->alias]['maxLength']);
 				}
 
 				$fieldRules[$key] = $rule;
@@ -164,23 +167,28 @@ class PasswordableBehavior extends ModelBehavior {
 			$Model->validator()->add($formFieldCurrent, $rules['formFieldCurrent']);
 
 			if (!$this->settings[$Model->alias]['allowSame']) {
-				$Model->validator()->add($formField, 'validateNotSame', array(
-					'rule' => array('validateNotSame', $formField, $formFieldCurrent),
-					'message' => 'valErrPwdSameAsBefore',
+				$Model->validator()->add($formField, 'validateNotSame', [
+					'rule' => ['validateNotSame', $formField, $formFieldCurrent],
+					'message' => __d('tools', 'valErrPwdSameAsBefore'),
 					'allowEmpty' => !$this->settings[$Model->alias]['require'],
 					'last' => true,
-				));
+				]);
 			}
 		} elseif (!isset($Model->validate[$formFieldCurrent])) {
 			// Try to match the password against the hash in the DB
 			if (!$this->settings[$Model->alias]['allowSame']) {
-				$Model->validator()->add($formField, 'validateNotSame', array(
-					'rule' => array('validateNotSameHash', $formField),
-					'message' => 'valErrPwdSameAsBefore',
+				$Model->validator()->add($formField, 'validateNotSame', [
+					'rule' => ['validateNotSameHash', $formField],
+					'message' => __d('tools', 'valErrPwdSameAsBefore'),
 					'allowEmpty' => !$this->settings[$Model->alias]['require'],
 					'last' => true,
-				));
+				]);
 			}
+		}
+
+		// Add custom rule(s) if configured
+		if ($this->settings[$Model->alias]['customValidation']) {
+			$Model->validator()->add($formField, $this->settings[$Model->alias]['customValidation']);
 		}
 	}
 
@@ -189,7 +197,7 @@ class PasswordableBehavior extends ModelBehavior {
 	 *
 	 * @return bool Success
 	 */
-	public function beforeValidate(Model $Model, $options = array()) {
+	public function beforeValidate(Model $Model, $options = []) {
 		$formField = $this->settings[$Model->alias]['formField'];
 		$formFieldRepeat = $this->settings[$Model->alias]['formFieldRepeat'];
 		$formFieldCurrent = $this->settings[$Model->alias]['formFieldCurrent'];
@@ -245,7 +253,7 @@ class PasswordableBehavior extends ModelBehavior {
 	 * @param Model $Model
 	 * @return bool Success
 	 */
-	public function beforeSave(Model $Model, $options = array()) {
+	public function beforeSave(Model $Model, $options = []) {
 		$formField = $this->settings[$Model->alias]['formField'];
 		$field = $this->settings[$Model->alias]['field'];
 		$type = $this->settings[$Model->alias]['hashType'];
@@ -258,7 +266,7 @@ class PasswordableBehavior extends ModelBehavior {
 		if (isset($Model->data[$Model->alias][$formField])) {
 			if ($type === 'blowfish' && function_exists('password_hash') && !empty($this->settings[$Model->alias]['passwordHasher'])) {
 				$cost = !empty($this->settings[$Model->alias]['hashCost']) ? $this->settings[$Model->alias]['hashCost'] : 10;
-				$options = array('cost' => $cost);
+				$options = ['cost' => $cost];
 				$PasswordHasher = $this->_getPasswordHasher($this->settings[$Model->alias]['passwordHasher']);
 				$Model->data[$Model->alias][$field] = $PasswordHasher->hash($Model->data[$Model->alias][$formField], $options);
 			} else {
@@ -277,7 +285,6 @@ class PasswordableBehavior extends ModelBehavior {
 				$formFieldCurrent = $this->settings[$Model->alias]['formFieldCurrent'];
 				unset($Model->data[$Model->alias][$formFieldCurrent]);
 			}
-
 		}
 
 		// Update whitelist
@@ -397,7 +404,7 @@ class PasswordableBehavior extends ModelBehavior {
 			$value = Security::hash($Model->data[$Model->alias][$formField], $type, $salt);
 		}
 
-		$dbValue = $Model->field($field, array($Model->primaryKey => $primaryKey));
+		$dbValue = $Model->field($field, [$Model->primaryKey => $primaryKey]);
 		if (!$dbValue) {
 			return true;
 		}
@@ -426,7 +433,7 @@ class PasswordableBehavior extends ModelBehavior {
 		}
 
 		$primaryKey = $Model->data[$Model->alias][$Model->primaryKey];
-		$dbValue = $Model->field($field, array($Model->primaryKey => $primaryKey));
+		$dbValue = $Model->field($field, [$Model->primaryKey => $primaryKey]);
 		if (!$dbValue && $pwd) {
 			return false;
 		}
@@ -454,8 +461,10 @@ class PasswordableBehavior extends ModelBehavior {
 	 * @return PasswordHasher
 	 */
 	protected function _getPasswordHasher($hasher) {
+		return PasswordHasherFactory::build($hasher);
+
 		$class = $hasher;
-		$config = array();
+		$config = [];
 		if (is_array($hasher)) {
 			$class = $hasher['className'];
 			unset($hasher['className']);
@@ -484,7 +493,7 @@ class PasswordableBehavior extends ModelBehavior {
 	 * @return void
 	 */
 	protected function _modifyWhitelist(Model $Model, $onSave = false) {
-		$fields = array();
+		$fields = [];
 		if ($onSave) {
 			$fields[] = $this->settings[$Model->alias]['field'];
 		} else {
@@ -499,7 +508,7 @@ class PasswordableBehavior extends ModelBehavior {
 
 		foreach ($fields as $field) {
 			if (!empty($Model->whitelist) && !in_array($field, $Model->whitelist)) {
-				$Model->whitelist = array_merge($Model->whitelist, array($field));
+				$Model->whitelist = array_merge($Model->whitelist, [$field]);
 			}
 		}
 	}

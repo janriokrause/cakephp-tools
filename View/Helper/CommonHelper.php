@@ -8,7 +8,7 @@ App::uses('Hash', 'Utility');
  */
 class CommonHelper extends AppHelper {
 
-	public $helpers = array('Session', 'Html');
+	public $helpers = ['Session', 'Html'];
 
 	/**
 	 * Display all flash messages.
@@ -19,7 +19,7 @@ class CommonHelper extends AppHelper {
 	 * @return string HTML
 	 * @deprecated Use FlashHelper::flash() instead.
 	 */
-	public function flash(array $types = array()) {
+	public function flash(array $types = []) {
 		// Get the messages from the session
 		$messages = (array)$this->Session->read('messages');
 		$cMessages = (array)Configure::read('messages');
@@ -133,12 +133,12 @@ class CommonHelper extends AppHelper {
 	 * - escape: false prevents h() and space transformation (defaults to true)
 	 * - tabsToSpaces: int (defaults to 4)
 	 */
-	public function esc($text, $options = array()) {
+	public function esc($text, $options = []) {
 		if (!isset($options['escape']) || $options['escape'] !== false) {
 			//$text = str_replace(' ', '&nbsp;', h($text));
 			$text = h($text);
 			// try to fix indends made out of spaces
-			$text = explode(NL, $text);
+			$text = explode("\n", $text);
 			foreach ($text as $key => $t) {
 				$i = 0;
 				while (!empty($t[$i]) && $t[$i] === ' ') {
@@ -149,7 +149,7 @@ class CommonHelper extends AppHelper {
 					$text[$key] = $t;
 				}
 			}
-			$text = implode(NL, $text);
+			$text = implode("\n", $text);
 			$esc = true;
 		}
 		if (!isset($options['nl2br']) || $options['nl2br'] !== false) {
@@ -159,8 +159,7 @@ class CommonHelper extends AppHelper {
 			$options['tabsToSpaces'] = 4;
 		}
 		if (!empty($options['tabsToSpaces'])) {
-
-			$text = str_replace(TB, str_repeat(!empty($esc) ? '&nbsp;' : ' ', $options['tabsToSpaces']), $text);
+			$text = str_replace("\t", str_repeat(!empty($esc) ? '&nbsp;' : ' ', $options['tabsToSpaces']), $text);
 		}
 
 		return $text;
@@ -242,14 +241,13 @@ class CommonHelper extends AppHelper {
 		if ($type === null && ($meta = Configure::read('Config.robots')) !== null) {
 			$type = $meta;
 		}
-		$content = array();
+		$content = [];
 		if ($type === 'public') {
 			$this->privatePage = false;
-			$content['robots'] = array('index', 'follow', 'noarchive');
-
+			$content['robots'] = ['index', 'follow', 'noarchive'];
 		} else {
 			$this->privatePage = true;
-			$content['robots'] = array('noindex', 'nofollow', 'noarchive');
+			$content['robots'] = ['noindex', 'nofollow', 'noarchive'];
 		}
 
 		$return = '<meta name="robots" content="' . implode(',', $content['robots']) . '" />';
@@ -281,7 +279,7 @@ class CommonHelper extends AppHelper {
 	 * @param array $additionalOptions
 	 * @return string HTML Markup
 	 */
-	public function metaDescription($content, $language = null, $options = array()) {
+	public function metaDescription($content, $language = null, $options = []) {
 		if (!empty($language)) {
 			$options['lang'] = mb_strtolower($language);
 		} elseif ($language !== false) {
@@ -325,7 +323,7 @@ class CommonHelper extends AppHelper {
 	 */
 	public function metaCanonical($url = null, $full = false) {
 		$canonical = $this->Html->url($url, $full);
-		$options = array('rel' => 'canonical', 'type' => null, 'title' => null);
+		$options = ['rel' => 'canonical', 'type' => null, 'title' => null];
 		return $this->Html->meta('canonical', $canonical, $options);
 	}
 
@@ -345,7 +343,7 @@ class CommonHelper extends AppHelper {
 		$url = $this->Html->url($url, $full);
 		//return $this->Html->meta('canonical', $canonical, array('rel'=>'canonical', 'type'=>null, 'title'=>null));
 		$lang = (array)$lang;
-		$res = array();
+		$res = [];
 		foreach ($lang as $language => $countries) {
 			if (is_numeric($language)) {
 				$language = '';
@@ -355,7 +353,7 @@ class CommonHelper extends AppHelper {
 			$countries = (array)$countries;
 			foreach ($countries as $country) {
 				$l = $language . $country;
-				$options = array('rel' => 'alternate', 'hreflang' => $l, 'type' => null, 'title' => null);
+				$options = ['rel' => 'alternate', 'hreflang' => $l, 'type' => null, 'title' => null];
 				$res[] = $this->Html->meta('alternate', $url, $options) . PHP_EOL;
 			}
 		}
@@ -370,9 +368,9 @@ class CommonHelper extends AppHelper {
 	 * @return string HTML Markup
 	 */
 	public function metaRss($url, $title = null) {
-		$tags = array(
+		$tags = [
 			'meta' => '<link rel="alternate" type="application/rss+xml" title="%s" href="%s" />',
-		);
+		];
 		if (empty($title)) {
 			$title = __d('tools', 'Subscribe to this feed');
 		} else {
@@ -390,9 +388,9 @@ class CommonHelper extends AppHelper {
 	 * @return string HTML Markup
 	 */
 	public function metaEquiv($type, $value, $escape = true) {
-		$tags = array(
+		$tags = [
 			'meta' => '<meta http-equiv="%s"%s />',
-		);
+		];
 		if ($value === null) {
 			return '';
 		}
@@ -411,9 +409,9 @@ class CommonHelper extends AppHelper {
 	 * @return string HTML Markup
 	 * @deprecated Use AssetCompress plugin instead
 	 */
-	public function css($files = array(), $options = array()) {
+	public function css($files = [], $options = []) {
 		$files = (array)$files;
-		$pieces = array();
+		$pieces = [];
 		foreach ($files as $file) {
 			$pieces[] = 'file=' . $file;
 		}
@@ -433,7 +431,7 @@ class CommonHelper extends AppHelper {
 	 * @return string HTML Markup
 	 * @deprecated Use AssetCompress plugin instead
 	 */
-	public function script($files = array(), $options = array()) {
+	public function script($files = [], $options = []) {
 		$files = (array)$files;
 		foreach ($files as $file) {
 			$pieces[] = 'file=' . $file;
@@ -451,7 +449,7 @@ class CommonHelper extends AppHelper {
 	 * @param array $fields
 	 * @return string HTML
 	 */
-	public function displayErrors($fields = array()) {
+	public function displayErrors($fields = []) {
 		$res = '';
 		if (!empty($this->validationErrors)) {
 			if ($fields === null) { # catch ALL
@@ -526,11 +524,11 @@ if (top!=self) top.location.ref=self.location.href;
 	 *
 	 * @return string
 	 */
-	public function browserAlert($id, $message, $options = array()) {
+	public function browserAlert($id, $message, $options = []) {
 		$engine = 'js';
 
 		if (!isset($options['escape']) || $options['escape'] !== false) {
-				$message = h($message);
+			$message = h($message);
 		}
 		return $this->Html->scriptBlock('
 // Returns the version of Internet Explorer or a -1
@@ -565,9 +563,9 @@ jQuery(document).ready(function() {
 	 *
 	 * @return string
 	 */
-	public function honeypot($noFollowUrl, $noscriptUrl = array()) {
+	public function honeypot($noFollowUrl, $noscriptUrl = []) {
 		$res = '<div class="invisible" style="display:none"><noscript>';
-		$res .= $this->Html->defaultLink('Email', $noFollowUrl, array('rel' => 'nofollow'));
+		$res .= $this->Html->defaultLink('Email', $noFollowUrl, ['rel' => 'nofollow']);
 
 		if (!empty($noscriptUrl)) {
 			$res .= BR . $this->Html->image($this->Html->defaultUrl($noscriptUrl, true)); //$this->Html->link($noscriptUrl);
@@ -598,7 +596,7 @@ jQuery(document).ready(function() {
 			if (!empty($viewPath) && $viewPath === 'errors') {
 				$error = true;
 			}
-$res .= '
+			$res .= '
 <script type="text/javascript">
 var pkBaseURL = (("https:" == document.location.protocol) ? "https://' . HTTP_HOST . '/' . $trackingUrl . '/" : "http://' . HTTP_HOST . '/' . $trackingUrl . '/");
 document.write(unescape("%3Cscript src=\'" + pkBaseURL + "piwik.js\' type=\'text/javascript\'%3E%3C/script%3E"));
@@ -642,7 +640,7 @@ piwikTracker.enableLinkTracking();
 	 * @deprecated - use Auth class instead
 	 */
 	public function roleNames($sessionRoles = null) {
-		$tmp = array();
+		$tmp = [];
 
 		if ($sessionRoles === null) {
 			$sessionRoles = $this->Session->read('Auth.User.Role');
@@ -657,10 +655,9 @@ piwikTracker.enableLinkTracking();
 		}
 		if (!empty($sessionRoles)) {
 			if (is_array($sessionRoles)) {
-
 				foreach ($sessionRoles as $sessionRole) {
 					if (!$sessionRole) {
-					continue;
+						continue;
 					}
 					if (array_key_exists((int)$sessionRole, $roles)) {
 						$tmp[$sessionRole] = $roles[(int)$sessionRole];
@@ -697,9 +694,9 @@ piwikTracker.enableLinkTracking();
 	 */
 	public function roleNamesTranslated($value) {
 		if (empty($value)) {
-			return array();
+			return [];
 		}
-		$ret = array();
+		$ret = [];
 		$translate = (array)Configure::read('Role');
 		if (is_array($value)) {
 			foreach ($value as $k => $v) {

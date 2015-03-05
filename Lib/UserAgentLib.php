@@ -8,20 +8,20 @@ App::uses('CakeRequest', 'Network');
  * Last but not least it should be capable of detecting if it is a real user or a bot
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  *
  */
 class UserAgentLib extends CakeRequest {
 
-	public $whitelist = array(
+	public $whitelist = [
 		'OMNIA7',
-	);
+	];
 
-	public $blacklist = array(
+	public $blacklist = [
 		'UP\.Browser'
-	);
+	];
 
-	public $searchBots = array(
+	public $searchBots = [
 		'Mirago' => 'HenryTheMiragorobot',
 		'Google' => 'Googlebot',
 		'Scooter' => 'Scooter',
@@ -34,19 +34,17 @@ class UserAgentLib extends CakeRequest {
 		'Bot (no details)' => 'PF:INET',
 		'Sitedomain' => 'Sitedomain-Bot',
 		'Askpeter' => 'askpeter_bot'
-	);
+	];
 
 	public $path = null;
 
-	public function __construct($agents = array()) {
-
+	public function __construct($agents = []) {
 		$this->path = VENDORS . 'files' . DS;
 	}
 
 	public function isBot() {
 		$file = $this->path . 'bots.txt';
 		if (file_exists($file)) {
-
 		}
 	}
 
@@ -70,7 +68,7 @@ class UserAgentLib extends CakeRequest {
 	 */
 	public function getAgent($agent) {
 		if (empty($agent)) {
-			 return '';
+			return '';
 		}
 		foreach ($this->searchBots as $name => $pattern) {
 			if (eregi($pattern, $agent)) {
@@ -125,7 +123,7 @@ class UserAgentLib extends CakeRequest {
 	 * fallbacks: cake and php
 	 */
 	public function getMobileDevices() {
-		$is = array(); //$this->RequestHandler->mobileUA;
+		$is = []; //$this->RequestHandler->mobileUA;
 		$is = $this->_detectors['mobile']['options'];
 
 		$is = array_merge($is, $this->_getMobileWhitelist());

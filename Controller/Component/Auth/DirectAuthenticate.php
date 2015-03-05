@@ -21,7 +21,7 @@ App::uses('BaseAuthenticate', 'Controller/Component/Auth');
  * Possible configs: see BaseAuthenticate.
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  * @cakephp 2.x (>= 2.3)
  */
 class DirectAuthenticate extends BaseAuthenticate {
@@ -43,9 +43,9 @@ class DirectAuthenticate extends BaseAuthenticate {
 		if (!$this->_checkFields($request, $model, $fields)) {
 			return false;
 		}
-		$conditions = array(
+		$conditions = [
 			$model . '.' . $fields['username'] => $request->data[$model][$fields['username']]
-		);
+		];
 		return $this->_findUser($conditions);
 	}
 

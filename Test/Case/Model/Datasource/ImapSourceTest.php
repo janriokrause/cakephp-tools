@@ -27,7 +27,7 @@ class ImapSourceTest extends MyCakeTestCase {
 		parent::setUp();
 
 		$this->Model = ClassRegistry::init('TestImap');
-		$config = array();
+		$config = [];
 		$this->Imap = new TestImapSource($config);
 	}
 
@@ -42,16 +42,21 @@ class ImapSourceTest extends MyCakeTestCase {
 		//$this->assertEquals($expected, $result);
 		$this->debug($result);
 	}
-
+	
+	/**
+	 * @return void
+	 */
 	public function testMakeSearch() {
-		$query = array(
+		$this->skipIf(!function_exists('imap_open'), 'No imap_open() function available. Please install extension/module.');
+	
+		$query = [
 			'answered' => 1,
 			'seen' => true,
 			'deleted' => null,
 			'flagged' => false, // will be reversed
-		);
-		$res = $this->Imap->makeSearch($this->Model, array('conditions' => $query));
-		$expected = array('SEEN', 'UNFLAGGED', 'ANSWERED');
+		];
+		$res = $this->Imap->makeSearch($this->Model, ['conditions' => $query]);
+		$expected = ['SEEN', 'UNFLAGGED', 'ANSWERED'];
 		$this->assertEquals($expected, $res);
 	}
 

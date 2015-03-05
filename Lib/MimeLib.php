@@ -6,12 +6,12 @@ App::uses('CakeResponse', 'Network');
  * Wrapper to be able to read cake core's mime types as well as fix for missing ones
  *
  * @version 1.0
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  * @author	Mark Scherer
  */
 class MimeLib extends CakeResponse {
 
-	protected $_mimeTypesExt = array(
+	protected $_mimeTypesExt = [
 		'3dm' => 'x-world/x-3dmf',
 		'3dmf' => 'x-world/x-3dmf',
 		'a' => 'application/octet-stream',
@@ -645,7 +645,7 @@ class MimeLib extends CakeResponse {
 		'xwd' => 'image/x-xwd',
 		'xwd' => 'image/x-xwindowdump',
 		'xyz' => 'chemical/x-pdb',
-		'z' => array('application/x-compress', 'application/x-compressed'),
+		'z' => ['application/x-compress', 'application/x-compressed'],
 		'zip' => 'application/x-compressed',
 		'zip' => 'application/x-zip-compressed',
 		'zip' => 'application/zip',
@@ -699,8 +699,8 @@ class MimeLib extends CakeResponse {
 		'ppt' => 'application/vnd.ms-powerpoint',
 		'odt' => 'application/vnd.oasis.opendocument.text',
 		'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
-		'swf' => array('application/x-shockwave-flash', 'application/x-shockwave-flash2-preview', 'application/futuresplash', 'image/vnd.rn-realflash')
-	);
+		'swf' => ['application/x-shockwave-flash', 'application/x-shockwave-flash2-preview', 'application/futuresplash', 'image/vnd.rn-realflash']
+	];
 
 	/**
 	 * Override constructor
@@ -767,11 +767,11 @@ class MimeLib extends CakeResponse {
 			return false;
 		}
 		/**
-		* Attempts to retrieve file info from FINFO
-		* If FINFO functions are not available then try to retrieve MIME type from pre-defined MIMEs
-		* If MIME type doesn't exist, then try (as a last resort) to use the (deprecated) mime_content_type function
-		* If all else fails, just return application/octet-stream
-		*/
+		 * Attempts to retrieve file info from FINFO
+		 * If FINFO functions are not available then try to retrieve MIME type from pre-defined MIMEs
+		 * If MIME type doesn't exist, then try (as a last resort) to use the (deprecated) mime_content_type function
+		 * If all else fails, just return application/octet-stream
+		 */
 		if (!function_exists("finfo_open")) {
 			if (function_exists("mime_content_type")) {
 				$type = mime_content_type($file);

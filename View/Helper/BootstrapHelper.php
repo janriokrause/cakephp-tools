@@ -11,18 +11,18 @@ App::uses('AppHelper', 'View/Helper');
  * Dependencies:
  * The respective JS plugins for the widgets.
  *
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  * @author Mark Scherer
  * @php 5
  * @version 1.0
  */
 class BootstrapHelper extends AppHelper {
 
-	public $helpers = array('Html', 'Form');
+	public $helpers = ['Html', 'Form'];
 
 	protected $_count = 1;
 
-	protected $_items = array();
+	protected $_items = [];
 
 	public function xx() {
 		//
@@ -37,7 +37,7 @@ class BootstrapHelper extends AppHelper {
 	 * - items (defaults to 8)
 	 * @return string html
 	 */
-	public function typeahead($fieldName, $options = array(), $inputOptions = array()) {
+	public function typeahead($fieldName, $options = [], $inputOptions = []) {
 		$inputOptions['data-provide'] = 'typeahead';
 		//$inputOptions['data-source'] = $this->_formatSource($options['data']);
 		if (!empty($options['items'])) {
@@ -69,14 +69,14 @@ class BootstrapHelper extends AppHelper {
 	 * @param array $options
 	 * @return string html
 	 */
-	public function carousel($items, $id = null, $globalOptions = array()) {
+	public function carousel($items, $id = null, $globalOptions = []) {
 		$res = '<div id="myCarousel" class="carousel">
 	<div class="carousel-inner">
 		' . $this->carouselItems($items, $globalOptions) . '
 	</div>
 	' . $this->carouselControl() . '
 </div>';
-	return $res;
+		return $res;
 	}
 
 	public function carouselControl() {
@@ -92,8 +92,8 @@ class BootstrapHelper extends AppHelper {
 	 * - active (visible, true/false)
 	 * @return string html
 	 */
-	public function carouselItems($items, $options = array()) {
-		$res = array();
+	public function carouselItems($items, $options = []) {
+		$res = [];
 		foreach ($items as $key => $item) {
 			$active = '';
 			if ($key == 0 && !isset($item['active']) || !empty($item['active'])) {
@@ -118,7 +118,7 @@ class BootstrapHelper extends AppHelper {
 	 * @param array $options
 	 * @return string html
 	 */
-	public function accordion($records, $id = null, $globalOptions = array()) {
+	public function accordion($records, $id = null, $globalOptions = []) {
 		$res = '<div class="accordion" id="accordion' . $id . '">';
 		foreach ($records as $record) {
 			$options = $globalOptions;
@@ -138,7 +138,7 @@ class BootstrapHelper extends AppHelper {
 	 * - active (collapsed, true/false)
 	 * @return string html
 	 */
-	public function accordionGroup($heading, $content, $options = array()) {
+	public function accordionGroup($heading, $content, $options = []) {
 		$i = $this->_count;
 		$this->_count++;
 		$in = '';

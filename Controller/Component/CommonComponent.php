@@ -6,17 +6,18 @@ if (!defined('CLASS_USER')) {
 App::uses('Component', 'Controller');
 App::uses('Sanitize', 'Utility');
 App::uses('Utility', 'Tools.Utility');
+App::uses('Hash', 'Utility');
 
 /**
  * A component included in every app to take care of common stuff.
  *
  * @author Mark Scherer
  * @copyright 2012 Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class CommonComponent extends Component {
 
-	public $components = array('Session', 'RequestHandler');
+	public $components = ['Session', 'RequestHandler'];
 
 	public $userModel = CLASS_USER;
 
@@ -55,13 +56,6 @@ class CommonComponent extends Component {
 			$this->Controller->request->params['pass'] = $this->trimDeep($this->Controller->request->params['pass']);
 		}
 
-		// Deprecation notices
-		if (Configure::read('App.warnAboutNamedParams')) {
-			if (!empty($Controller->request->params['named']) && ($referer = $Controller->request->referer(true)) && $referer !== '/') {
-				trigger_error('Named params ' . json_encode($Controller->request->params['named']) . ' - from ' . $referer, E_USER_DEPRECATED);
-			}
-		}
-
 		// Information gathering
 		if (!Configure::read('App.disableMobileDetection') && ($mobile = $this->Session->read('Session.mobile')) === null) {
 			App::uses('UserAgentLib', 'Tools.Lib');
@@ -91,7 +85,7 @@ class CommonComponent extends Component {
 			$this->Session->delete('Message');
 		}
 
-		if ($this->Controller->request->is('ajax')) {
+		if (isset($this->Controller->request) && $this->Controller->request->is('ajax')) {
 			$ajaxMessages = array_merge(
 				(array)$this->Session->read('messages'),
 				(array)Configure::read('messages')
@@ -135,7 +129,7 @@ class CommonComponent extends Component {
 	 * @return bool If it is of type POST/PUT
 	 */
 	public function isPosted() {
-		return $this->Controller->request->is(array('post', 'put'));
+		return $this->Controller->request->is(['post', 'put']);
 	}
 
 	/**
@@ -186,9 +180,13 @@ class CommonComponent extends Component {
 	/**
 	 * Add helper just in time (inside actions - only when needed)
 	 * aware of plugins
+	 *
+	 * Note that this method will not exist in 3.x anymore. Lazyloading of helpers
+	 * makes this unnecessary.
+	 *
 	 * @param mixed $helpers (single string or multiple array)
 	 */
-	public function loadHelper($helpers = array()) {
+	public function loadHelper($helpers = []) {
 		$this->Controller->helpers = array_merge($this->Controller->helpers, (array)$helpers);
 	}
 
@@ -196,10 +194,14 @@ class CommonComponent extends Component {
 	 * Add lib just in time (inside actions - only when needed)
 	 * aware of plugins and config array (if passed)
 	 * ONLY works if constructor consists only of one param (settings)!
+	 *
+	 * Note that this method will not exist in 3.x anymore.
+	 *
 	 * @param mixed $libs (single string or multiple array)
 	 * e.g.: array('Tools.MyLib'=>array('key'=>'value'), ...)
+	 * @return void
 	 */
-	public function loadLib($libs = array()) {
+	public function loadLib($libs = []) {
 		foreach ((array)$libs as $lib => $config) {
 			if (is_int($lib)) {
 				$lib = $config;
@@ -225,11 +227,11 @@ class CommonComponent extends Component {
 	 * @param mixed $components (single string or multiple array)
 	 * @poaram bool $callbacks (defaults to true)
 	 */
-	public function loadComponent($components = array(), $callbacks = true) {
+	public function loadComponent($components = [], $callbacks = true) {
 		foreach ((array)$components as $component => $config) {
 			if (is_int($component)) {
 				$component = $config;
-				$config = array();
+				$config = [];
 			}
 			list($plugin, $componentName) = pluginSplit($component);
 			if (isset($this->Controller->{$componentName})) {
@@ -266,7 +268,7 @@ class CommonComponent extends Component {
 	 * @return array Url params
 	 */
 	public static function defaultUrlParams() {
-		$defaults = array('plugin' => false);
+		$defaults = ['plugin' => false];
 		$prefixes = (array)Configure::read('Routing.prefixes');
 		foreach ($prefixes as $prefix) {
 			$defaults[$prefix] = false;
@@ -288,8 +290,8 @@ class CommonComponent extends Component {
 			$action = $this->Controller->request->params['action'];
 		}
 
-		$url = array_merge($this->Controller->request->params['named'], $this->Controller->request->params['pass'], array('prefix' => isset($this->Controller->request->params['prefix']) ? $this->Controller->request->params['prefix'] : null,
-			'plugin' => $this->Controller->request->params['plugin'], 'action' => $action, 'controller' => $this->Controller->request->params['controller']));
+		$url = array_merge($this->Controller->request->params['named'], $this->Controller->request->params['pass'], ['prefix' => isset($this->Controller->request->params['prefix']) ? $this->Controller->request->params['prefix'] : null,
+			'plugin' => $this->Controller->request->params['plugin'], 'action' => $action, 'controller' => $this->Controller->request->params['controller']]);
 
 		if ($asString === true) {
 			return Router::url($url);
@@ -332,14 +334,14 @@ class CommonComponent extends Component {
 	 * - fields
 	 * @return bool Success
 	 */
-	public function manualLogin($id, $settings = array()) {
+	public function manualLogin($id, $settings = []) {
 		$requestData = $this->Controller->request->data;
 		$authData = $this->Controller->Auth->authenticate;
 		$settings = array_merge($authData, $settings);
-		$settings['fields'] = array('username' => 'id');
+		$settings['fields'] = ['username' => 'id'];
 
-		$this->Controller->request->data = array($this->userModel => array('id' => $id));
-		$this->Controller->Auth->authenticate = array('Tools.Direct' => $settings);
+		$this->Controller->request->data = [$this->userModel => ['id' => $id]];
+		$this->Controller->Auth->authenticate = ['Tools.Direct' => $settings];
 		$result = $this->Controller->Auth->login();
 
 		$this->Controller->Auth->authenticate = $authData;
@@ -359,21 +361,10 @@ class CommonComponent extends Component {
 	 * @return bool Success
 	 */
 	public function forceLogin($id) {
-		$settings = array(
-			'scope' => array(),
-		);
+		$settings = [
+			'scope' => [],
+		];
 		return $this->manualLogin($id, $settings);
-		/*
-		if (!isset($this->User)) {
-			$this->User = ClassRegistry::init(defined('CLASS_USER') ? CLASS_USER : $this->userModel);
-		}
-		$data = $this->User->get($id);
-		if (!$data) {
-			return false;
-		}
-		$data = $data[$this->userModel];
-		return $this->Controller->Auth->login($data);
-		*/
 	}
 
 	/**
@@ -387,9 +378,9 @@ class CommonComponent extends Component {
 	 */
 	public function autoRedirect($whereTo, $allowSelf = true, $status = null) {
 		if ($allowSelf || $this->Controller->referer(null, true) !== '/' . $this->Controller->request->url) {
-			$this->Controller->redirect($this->Controller->referer($whereTo, true), $status);
+			return $this->Controller->redirect($this->Controller->referer($whereTo, true), $status);
 		}
-		$this->Controller->redirect($whereTo, $status);
+		return $this->Controller->redirect($whereTo, $status);
 	}
 
 	/**
@@ -404,7 +395,7 @@ class CommonComponent extends Component {
 	 * @return void
 	 */
 	public function postRedirect($whereTo, $status = 302) {
-		$this->Controller->redirect($whereTo, $status);
+		return $this->Controller->redirect($whereTo, $status);
 	}
 
 	/**
@@ -418,7 +409,7 @@ class CommonComponent extends Component {
 	public function autoPostRedirect($whereTo, $conditionalAutoRedirect = true, $status = 302) {
 		$referer = $this->Controller->referer($whereTo, true);
 		if (!$conditionalAutoRedirect && !empty($referer)) {
-			$this->postRedirect($referer, $status);
+			return $this->postRedirect($referer, $status);
 		}
 
 		if (!empty($referer)) {
@@ -434,7 +425,7 @@ class CommonComponent extends Component {
 			}
 			// fixme
 			if (!isset($this->Controller->autoRedirectActions)) {
-				$this->Controller->autoRedirectActions = array();
+				$this->Controller->autoRedirectActions = [];
 			}
 			foreach ($this->Controller->autoRedirectActions as $action) {
 				list($controller, $action) = pluginSplit($action);
@@ -447,10 +438,10 @@ class CommonComponent extends Component {
 				if (!in_array($referer['action'], $this->Controller->autoRedirectActions)) {
 					continue;
 				}
-				$this->autoRedirect($whereTo, true, $status);
+				return $this->autoRedirect($whereTo, true, $status);
 			}
 		}
-		$this->postRedirect($whereTo, $status);
+		return $this->postRedirect($whereTo, $status);
 	}
 
 	/**
@@ -490,7 +481,7 @@ class CommonComponent extends Component {
 	 */
 	public function prgRedirect($status = 302) {
 		if (!empty($_COOKIE[Configure::read('Session.cookie')])) {
-			$this->Controller->redirect('/' . $this->Controller->request->url, $status);
+			return $this->Controller->redirect('/' . $this->Controller->request->url, $status);
 		}
 	}
 
@@ -504,7 +495,7 @@ class CommonComponent extends Component {
 	 * @return void
 	 */
 	public function setMeta($type, $content, $prep = true) {
-		if (!in_array($type, array('title', 'canonical', 'description', 'keywords', 'robots', 'language', 'custom'))) {
+		if (!in_array($type, ['title', 'canonical', 'description', 'keywords', 'robots', 'language', 'custom'])) {
 			trigger_error(sprintf('Meta Type %s invalid', $type), E_USER_WARNING);
 			return;
 		}
@@ -560,7 +551,7 @@ class CommonComponent extends Component {
 		$ref = env('HTTP_USER_AGENT');
 		if ($this->isForeignReferer($ref)) {
 			if (strpos(strtolower($ref), 'http://anonymouse.org/') === 0) {
-				$this->cakeError('error406', array());
+				$this->cakeError('error406', []);
 			}
 		}
 	}
@@ -672,7 +663,7 @@ class CommonComponent extends Component {
 			$this->Controller->log('301: ' . $this->Controller->request->params['controller'] . ' => ' . $name . ' (Ref ' . $this->Controller->referer() . ')', '301'); // log problem with controller naming
 			if (!$this->Controller->RequestHandler->isPost()) {
 				// underscored version is the only valid one to avoid duplicate content
-				$url = array('controller' => $name, 'action' => $this->Controller->request->params['action']);
+				$url = ['controller' => $name, 'action' => $this->Controller->request->params['action']];
 				$url = array_merge($url, $this->Controller->request->params['pass'], $this->Controller->request->params['named']);
 				//TODO: add plugin/admin stuff which right now is supposed to work automatically
 				$this->Controller->redirect($url, 301);
@@ -687,30 +678,10 @@ class CommonComponent extends Component {
 			$this->log('301: ' . $this->Controller->here . ' => ' . $currentUrl . ' (Referer ' . $this->Controller->referer() . ')', '301');
 
 			if (!$this->Controller->RequestHandler->isPost()) {
-				$url = array('controller' => $this->Controller->request->params['controller'], 'action' => $this->Controller->request->params['action']);
+				$url = ['controller' => $this->Controller->request->params['controller'], 'action' => $this->Controller->request->params['action']];
 				$url = array_merge($url, $this->Controller->request->params['pass'], $this->Controller->request->params['named']);
 				$this->Controller->redirect($url, 301);
 			}
-		}
-	}
-
-	/**
-	 * Main controller function for seo-slugs
-	 * passed titleSlug != current title => redirect to the expected one
-	 *
-	 * @deprecated Will be removed in 1.0
-	 * @return void
-	 */
-	public function ensureConsistency($id, $passedTitleSlug, $currentTitle) {
-		$expectedTitle = slug($currentTitle);
-		if (empty($passedTitleSlug) || $expectedTitle != $passedTitleSlug) { # case sensitive!!!
-			$ref = env('HTTP_REFERER');
-			if (!$this->isForeignReferer($ref)) {
-				$this->Controller->log('Internal ConsistencyProblem at \'' . $ref . '\' - [' . $passedTitleSlug . '] instead of [' . $expectedTitle . ']', 'referer');
-			} else {
-				$this->Controller->log('External ConsistencyProblem at \'' . $ref . '\' - [' . $passedTitleSlug . '] instead of [' . $expectedTitle . ']', 'referer');
-			}
-			$this->Controller->redirect(array($id, $expectedTitle), 301);
 		}
 	}
 
@@ -723,7 +694,7 @@ class CommonComponent extends Component {
 	 * @param array $matching
 	 * @return string result
 	 */
-	public static function getGroup($multiDimArray, $key, $matching = array()) {
+	public static function getGroup($multiDimArray, $key, $matching = []) {
 		if (!is_array($multiDimArray) || empty($key)) {
 			return '';
 		}
@@ -747,7 +718,7 @@ class CommonComponent extends Component {
 	 * Move to boostrap?
 	 */
 	public function trimDeep($value) {
-		$value = is_array($value) ? array_map(array($this, 'trimDeep'), $value) : trim($value);
+		$value = is_array($value) ? array_map([$this, 'trimDeep'], $value) : trim($value);
 		return $value;
 	}
 
@@ -755,7 +726,7 @@ class CommonComponent extends Component {
 	 * Move to boostrap?
 	 */
 	public function specialcharsDeep($value) {
-		$value = is_array($value) ? array_map(array($this, 'specialcharsDeep'), $value) : htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+		$value = is_array($value) ? array_map([$this, 'specialcharsDeep'], $value) : htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 		return $value;
 	}
 
@@ -763,7 +734,7 @@ class CommonComponent extends Component {
 	 * Move to boostrap?
 	 */
 	public function deep($function, $value) {
-		$value = is_array($value) ? array_map(array($this, $function), $value) : $function($value);
+		$value = is_array($value) ? array_map([$this, $function], $value) : $function($value);
 		return $value;
 	}
 
@@ -787,16 +758,15 @@ class CommonComponent extends Component {
 
 		// parses the list, but leaves tokens untouched inside () brackets
 		$stringArray = String::tokenize($string, $separator);
-		$returnArray = array();
+		$returnArray = [];
 
 		if (empty($stringArray)) {
-			return array();
+			return [];
 		}
 
 		foreach ($stringArray as $t) {
 			$t = trim($t);
 			if (!empty($t)) {
-
 				if ($camelize === true) {
 					$t = mb_strtolower($t);
 					$t = Inflector::camelize(Inflector::underscore($t)); // problems with non-alpha chars!
@@ -816,10 +786,10 @@ class CommonComponent extends Component {
 	 * @return mixed
 	 */
 	public static function separators($s = null, $valueOnly = false) {
-		$separatorsValues = array(SEPARATOR_COMMA => ',', SEPARATOR_SEMI => ';', SEPARATOR_SPACE => ' ', SEPARATOR_TAB => TB, SEPARATOR_NL => NL);
+		$separatorsValues = [SEPARATOR_COMMA => ',', SEPARATOR_SEMI => ';', SEPARATOR_SPACE => ' ', SEPARATOR_TAB => TB, SEPARATOR_NL => NL];
 
-		$separators = array(SEPARATOR_COMMA => '[ , ] ' . __d('tools', 'Comma'), SEPARATOR_SEMI => '[ ; ] ' . __d('tools', 'Semicolon'), SEPARATOR_SPACE => '[ &nbsp; ] ' . __d('tools', 'Space'), SEPARATOR_TAB =>
-			'[ &nbsp;&nbsp;&nbsp;&nbsp; ] ' . __d('tools', 'Tabulator'), SEPARATOR_NL => '[ \n ] ' . __d('tools', 'New Line'));
+		$separators = [SEPARATOR_COMMA => '[ , ] ' . __d('tools', 'Comma'), SEPARATOR_SEMI => '[ ; ] ' . __d('tools', 'Semicolon'), SEPARATOR_SPACE => '[ &nbsp; ] ' . __d('tools', 'Space'), SEPARATOR_TAB =>
+			'[ &nbsp;&nbsp;&nbsp;&nbsp; ] ' . __d('tools', 'Tabulator'), SEPARATOR_NL => '[ \n ] ' . __d('tools', 'New Line')];
 
 		if ($s !== null) {
 			if (array_key_exists($s, $separators)) {
@@ -840,7 +810,7 @@ class CommonComponent extends Component {
 	 * @return array email - pattern: array('email'=>,'name'=>)
 	 */
 	public function splitEmail($email, $abortOnError = false) {
-		$array = array('email' => '', 'name' => '');
+		$array = ['email' => '', 'name' => ''];
 		if (($pos = mb_strpos($email, '<')) !== false) {
 			$name = substr($email, 0, $pos);
 			$email = substr($email, $pos + 1);
@@ -888,7 +858,7 @@ class CommonComponent extends Component {
 	 */
 	public function extractEmailInfo($email, $type = null) {
 		//$checkpos = strrpos($email, '@');
-		$nameParts = explode('@', $email);
+		$nameParts = Hash::filter(explode('@', $email));
 		if (count($nameParts) !== 2) {
 			return false;
 		}
@@ -939,8 +909,7 @@ class CommonComponent extends Component {
 	 * @param array $options
 	 * @return array Cleaned array('keyword'=>'searchphrase') or array('keyword LIKE'=>'searchphrase')
 	 */
-	public function getSearchItem($keyword = null, $searchphrase = null, $options = array()) {
-
+	public function getSearchItem($keyword = null, $searchphrase = null, $options = []) {
 		if (isset($options['wildcard']) && $options['wildcard'] == true) {
 			if (strpos($searchphrase, '*') !== false || strpos($searchphrase, '_') !== false) {
 				$keyword .= ' LIKE';
@@ -952,27 +921,7 @@ class CommonComponent extends Component {
 			// allow % and _ to remain in searchstring (without LIKE not problematic), * has no effect either!
 		}
 
-		return array($keyword => $searchphrase);
-	}
-
-	/**
-	 * Returns auto-generated password
-	 *
-	 * @param string $type: user, ...
-	 * @param int $length (if no type is submitted)
-	 * @return pwd on success, empty string otherwise
-	 * @deprecated Will be removed in 1.0. Use RandomLib
-	 */
-	public static function pwd($type = null, $length = null) {
-		trigger_error('deprecated');
-		App::uses('RandomLib', 'Tools.Lib');
-		if (!empty($type) && $type === 'user') {
-			return RandomLib::pronounceablePwd(6);
-		}
-		if (!empty($length)) {
-			return RandomLib::pronounceablePwd($length);
-		}
-		return '';
+		return [$keyword => $searchphrase];
 	}
 
 	/**
@@ -998,7 +947,7 @@ class CommonComponent extends Component {
 	 */
 	public function responseCodes($code = null, $autoTranslate = false) {
 		//TODO: use core ones Controller::httpCodes
-		$responses = array(
+		$responses = [
 			100 => 'Continue',
 			101 => 'Switching Protocols',
 			200 => 'OK',
@@ -1039,7 +988,7 @@ class CommonComponent extends Component {
 			503 => 'Service Unavailable',
 			504 => 'Gateway Time-out',
 			505 => 'HTTP Version not supported' # MOD 2009-07-21 ms: 505 added!!!
-		);
+		];
 		if ($code === null) {
 			if ($autoTranslate) {
 				foreach ($responses as $key => $value) {
@@ -1072,12 +1021,12 @@ class CommonComponent extends Component {
 	public function smtpResponseCodes($code = null, $autoTranslate = false) {
 		// 550 5.1.1 User is unknown
 		// 552 5.2.2 Storage Exceeded
-		$responses = array(
+		$responses = [
 			451 => 'Need to authenticate',
 			550 => 'User Unknown',
 			552 => 'Storage Exceeded',
 			554 => 'Refused'
-		);
+		];
 		if (!empty($code) && array_key_exists((int)$code, $responses)) {
 			if ($autoTranslate) {
 				return __d('tools', $responses[$code]);

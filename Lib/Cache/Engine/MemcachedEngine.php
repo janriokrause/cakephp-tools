@@ -13,7 +13,7 @@
  * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
  * @since         CakePHP(tm) v 1.2.0.4933
- * @license       http://www.opensource.org/licenses/mit-license.php MIT License
+ * @license       http://opensource.org/licenses/mit-license.php MIT
  */
 
 /**
@@ -58,7 +58,7 @@ class MemcachedEngine extends CacheEngine {
 	 *
 	 * @var array
 	 */
-	public $settings = array();
+	public $settings = [];
 
 	/**
 	 * Initialize the Cache Engine
@@ -69,25 +69,25 @@ class MemcachedEngine extends CacheEngine {
 	 * @param array $settings array of setting for the engine
 	 * @return bool True if the engine has been successfully initialized, false if not
 	 */
-	public function init($settings = array()) {
+	public function init($settings = []) {
 		if (!class_exists('Memcached')) {
 			return false;
 		}
 		if (!isset($settings['prefix'])) {
 			$settings['prefix'] = Inflector::slug(APP_DIR) . '_';
 		}
-		$settings += array(
+		$settings += [
 			'engine' => 'Memcached',
-			'servers' => array('127.0.0.1'),
+			'servers' => ['127.0.0.1'],
 			'compress' => false,
 			'persistent' => true
-		);
+		];
 		parent::init($settings);
 
 		$this->_keys .= $this->settings['prefix'];
 
 		if (!is_array($this->settings['servers'])) {
-			$this->settings['servers'] = array($this->settings['servers']);
+			$this->settings['servers'] = [$this->settings['servers']];
 		}
 		if (!isset($this->_Memcached)) {
 			$return = false;
@@ -95,7 +95,7 @@ class MemcachedEngine extends CacheEngine {
 			$this->_setOptions();
 
 			if (!count($this->_Memcached->getServerList())) {
-				$servers = array();
+				$servers = [];
 				foreach ($this->settings['servers'] as $server) {
 					$servers[] = $this->_parseServerString($server);
 				}
@@ -103,10 +103,11 @@ class MemcachedEngine extends CacheEngine {
 				if ($this->_Memcached->addServers($servers)) {
 					$return = true;
 				}
-
 			}
 
-			if (!$this->_Memcached->get($this->_keys)) $this->_Memcached->set($this->_keys, '');
+			if (!$this->_Memcached->get($this->_keys)) {
+				$this->_Memcached->set($this->_keys, '');
+			}
 			return $return;
 		}
 
@@ -137,7 +138,7 @@ class MemcachedEngine extends CacheEngine {
 	 */
 	protected function _parseServerString($server) {
 		if ($server[0] === 'u') {
-			return array($server, 0);
+			return [$server, 0];
 		}
 		if (substr($server, 0, 1) === '[') {
 			$position = strpos($server, ']:');
@@ -153,7 +154,7 @@ class MemcachedEngine extends CacheEngine {
 			$host = substr($server, 0, $position);
 			$port = substr($server, $position + 1);
 		}
-		return array($host, (int)$port);
+		return [$host, (int)$port];
 	}
 
 	/**
@@ -229,11 +230,13 @@ class MemcachedEngine extends CacheEngine {
 	public function clear($check) {
 		$keys = array_slice(explode($this->_keySeparator, $this->_Memcached->get($this->_keys)), 1);
 
-		foreach ($keys as $key)
+		foreach ($keys as $key) {
 			$this->_Memcached->delete($this->settings['prefix'] . $key);
+		}
 
 		$this->_Memcached->delete($this->_keys);
 
 		return true;
 	}
+
 }

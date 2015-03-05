@@ -25,19 +25,19 @@ App::uses('ModelBehavior', 'Model');
  * $Model->Behaviors->load('Tools.MultipleDisplayFields', $config);
  *
  * @see: http://bakery.cakephp.org/articles/view/multiple-display-field-3
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  * @modified Mark Scherer
  */
 class MultipleDisplayFieldsBehavior extends ModelBehavior {
 
-	protected $_defaultConfig = array(
-		'fields' => array(),
-		'defaults' => array(), // default values in case a field is empty/null
+	protected $_defaultConfig = [
+		'fields' => [],
+		'defaults' => [], // default values in case a field is empty/null
 		'pattern' => null, // automatically uses `%s %s %s ...` as many times as needed
 		'displayField' => null, // defaults to current $displayField - only needed for other than find(list)
 		//'callback' => null, // instead of a pattern you could also use a custom model method as callback here
 		//'on' => array('list'),
-	);
+	];
 
 	/**
 	 * MultipleDisplayFieldsBehavior::setup()
@@ -46,14 +46,16 @@ class MultipleDisplayFieldsBehavior extends ModelBehavior {
 	 * @param array $config
 	 * @return void
 	 */
-	public function setup(Model $Model, $config = array()) {
+	public function setup(Model $Model, $config = []) {
 		$this->settings[$Model->alias] = $this->_defaultConfig;
 
 		if (isset($config['fields'])) {
-			$myFields = array();
+			$myFields = [];
 			foreach ($config['fields'] as $key => $val) {
 				$modelField = explode('.', $val);
-				if (empty($myFields[$modelField[0]])) $myFields[$modelField[0]] = array();
+				if (empty($myFields[$modelField[0]])) {
+					$myFields[$modelField[0]] = [];
+				}
 				$myFields[$modelField[0]][] = $modelField[1];
 			}
 			$this->settings[$Model->alias]['fields'] = $myFields;
@@ -84,7 +86,7 @@ class MultipleDisplayFieldsBehavior extends ModelBehavior {
 	public function afterFind(Model $Model, $results, $primary = false) {
 		// if displayFields is set, attempt to populate
 		foreach ($results as $key => $result) {
-			$displayFieldValues = array();
+			$displayFieldValues = [];
 			$fieldsPresent = true;
 
 			foreach ($this->settings[$Model->alias]['fields'] as $mName => $mFields) {
@@ -103,7 +105,7 @@ class MultipleDisplayFieldsBehavior extends ModelBehavior {
 			}
 
 			if ($fieldsPresent) {
-				$params = array_merge(array($this->settings[$Model->alias]['pattern']), $displayFieldValues);
+				$params = array_merge([$this->settings[$Model->alias]['pattern']], $displayFieldValues);
 
 				$string = '';
 				if (!empty($this->settings[$Model->alias]['defaults'])) {
